@@ -1,0 +1,12 @@
+{
+  "commit": {
+    "commit": "e7432bc2da7e145a8c4fcb89562c330d98bc862e",
+    "author": "Scott Chamberlain <sckott@fastmail.com>",
+    "time": "2021-06-07 21:51:20",
+    "files": 5,
+    "merge": false,
+    "message": "#98 #100 fix to info, trailing slashes issue, add tests, bump version\n"
+  },
+  "remote": "https://github.com/ropensci/rerddap",
+  "pkg": "rerddap"
+}

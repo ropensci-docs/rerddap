@@ -1,0 +1,11 @@
+pandoc: '2.5'
+pkgdown: 1.6.1
+pkgdown_sha: ~
+articles:
+  Using_rerddap: Using_rerddap.html
+  rerddap: rerddap.html
+last_built: 2021-07-13T17:44Z
+urls:
+  reference: https://docs.ropensci.org/rerddap/reference
+  article: https://docs.ropensci.org/rerddap/articles
+
