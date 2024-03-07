@@ -1,0 +1,12 @@
+{
+  "commit": {
+    "commit": "5ef985bc4b58bd5200c011e356598e82ac783471",
+    "author": "Roy Mendelssohn <roy.mendelssohn@noaa.gov>",
+    "time": "2024-01-12 19:48:27",
+    "files": 55,
+    "merge": false,
+    "message": "cran v1.1.0 extra files removed\n\nremoved extraneous files\n"
+  },
+  "repo": "https://github.com/ropensci/rerddap",
+  "pkg": "rerddap"
+}
