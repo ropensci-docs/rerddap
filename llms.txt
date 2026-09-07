@@ -1,0 +1,197 @@
+# rerddap
+
+`rerddap` is a general purpose R client for working with ERDDAP servers.
+
+Package Docs: <https://docs.ropensci.org/rerddap/>
+
+## Installation
+
+From CRAN
+
+``` r
+
+install.packages("rerddap")
+```
+
+Or development version from GitHub
+
+``` r
+
+remotes::install_github("ropensci/rerddap")
+```
+
+``` r
+
+library("rerddap")
+```
+
+Some users may experience an installation error, stating to install 1 or
+more packages, e.g., you may need `DBI`, in which case do, for example,
+`install.packages("DBI")` before installing `rerddap`.
+
+## Background
+
+ERDDAP™ is a server built on top of OPenDAP, which serves some NOAA
+data. You can get gridded data (griddap
+(<https://upwell.pfeg.noaa.gov/erddap/griddap/documentation.html>)),
+which lets you query from gridded datasets, or table data (tabledap
+(<https://upwell.pfeg.noaa.gov/erddap/tabledap/documentation.html>))
+which lets you query from tabular datasets. In terms of how we interface
+with them, there are similarities, but some differences too. We try to
+make a similar interface to both data types in `rerddap`.
+
+## NetCDF
+
+`rerddap` supports NetCDF format, and is the default when using the
+[`griddap()`](https://docs.ropensci.org/rerddap/reference/griddap.md)
+function. NetCDF is a binary file format, and will have a much smaller
+footprint on your disk than csv. The binary file format means it’s
+harder to inspect, but the `ncdf4` package makes it easy to pull data
+out and write data back into a NetCDF file. Note the the file extension
+for NetCDF files is `.nc`. Whether you choose NetCDF or csv for small
+files won’t make much of a difference, but will with large files.
+
+## Caching
+
+Data files downloaded are cached in a single directory on your machine
+determined by the `hoardr` package. When you use
+[`griddap()`](https://docs.ropensci.org/rerddap/reference/griddap.md) or
+[`tabledap()`](https://docs.ropensci.org/rerddap/reference/tabledap.md)
+functions, we construct a MD5 hash from the base URL, and any query
+parameters - this way each query is separately cached. Once we have the
+hash, we look in the cache directory for a matching hash. If there’s a
+match we use that file on disk - if no match, we make a http request for
+the data to the ERDDAP server you specify.
+
+## ERDDAP™ servers
+
+You can get a data.frame of ERDDAP™ servers using the function
+[`servers()`](https://docs.ropensci.org/rerddap/reference/servers.md).
+Most I think serve some kind of NOAA data, but there are a few that
+aren’t NOAA data. If you know of more ERDDAP™ servers, send a pull
+request, or let us know.
+
+## Meta
+
+- Please [report any issues or
+  bugs](https://github.com/ropensci/rerddap/issues).
+- License: MIT
+- Get citation information for `rerddap` in R doing
+  `citation(package = 'rerddap')`
+- Please note that this package is released with a [Contributor Code of
+  Conduct](https://ropensci.org/code-of-conduct/). By contributing to
+  this project, you agree to abide by its terms.
+
+# Package index
+
+## rerddap Package Description
+
+- [`rerddap-package`](https://docs.ropensci.org/rerddap/reference/rerddap.md)
+  [`rerddap`](https://docs.ropensci.org/rerddap/reference/rerddap.md) :
+  rerddap
+
+## Search
+
+Functions to search for ERDDAP™ servers as well as to search ERDDAP™ for
+datasets whose metadata match the given search.
+
+- [`ed_search()`](https://docs.ropensci.org/rerddap/reference/ed_search.md)
+  [`ed_datasets()`](https://docs.ropensci.org/rerddap/reference/ed_search.md)
+  : Search for ERDDAP™ tabledep or griddap datasets
+- [`ed_search_adv()`](https://docs.ropensci.org/rerddap/reference/ed_search_adv.md)
+  : Advanced search for ERDDAP™ tabledep or griddap datasets
+- [`global_search()`](https://docs.ropensci.org/rerddap/reference/global_search.md)
+  : global_search
+- [`servers()`](https://docs.ropensci.org/rerddap/reference/servers.md)
+  : ERDDAP™ server URLS and other info
+
+## Obtain basic dataset metadata
+
+Obtain the basic dataset metadata to help in subsetting and downloading.
+
+- [`info()`](https://docs.ropensci.org/rerddap/reference/info.md)
+  [`as.info()`](https://docs.ropensci.org/rerddap/reference/info.md) :
+  Get information on an ERDDAP(TM) dataset.
+- [`browse()`](https://docs.ropensci.org/rerddap/reference/browse.md) :
+  Browse a dataset webpage.
+
+## Subset and Download Data
+
+Functions to subset and download ERDDAP™ grids and tables.
+
+- [`griddap()`](https://docs.ropensci.org/rerddap/reference/griddap.md)
+  : Get ERDDAP(TM) gridded data
+- [`tabledap()`](https://docs.ropensci.org/rerddap/reference/tabledap.md)
+  : Get ERDDAP™ tabledap data.
+- [`estimate_griddap_size()`](https://docs.ropensci.org/rerddap/reference/estimate_griddap_size.md)
+  : Estimate the size of a rerddap::griddap() request
+
+## Optional Settings for Data Download
+
+Optional settings for functions that subset and download ERDDAP™ grids
+and tables.
+
+- [`disk()`](https://docs.ropensci.org/rerddap/reference/disk.md)
+  [`memory()`](https://docs.ropensci.org/rerddap/reference/disk.md) :
+  Options for saving ERDDAP™ datasets.
+- [`eurl()`](https://docs.ropensci.org/rerddap/reference/eurl.md) :
+  Default ERDDAP™ server URL
+
+## Cache Handling
+
+Functions for dealing with ‘rerddap’ cache.
+
+- [`cache_delete()`](https://docs.ropensci.org/rerddap/reference/cache_delete.md)
+  [`cache_delete_all()`](https://docs.ropensci.org/rerddap/reference/cache_delete.md)
+  : Delete cached files
+- [`cache_details()`](https://docs.ropensci.org/rerddap/reference/cache_details.md)
+  : Get details of cached files
+- [`cache_setup()`](https://docs.ropensci.org/rerddap/reference/cache_setup.md)
+  [`cache_info()`](https://docs.ropensci.org/rerddap/reference/cache_setup.md)
+  : Setup cache path
+- [`cache_list()`](https://docs.ropensci.org/rerddap/reference/cache_list.md)
+  : List cached files
+
+## Various ERDDAP™ Based Utilities
+
+Various ERDDAP™ based utilities for converting parameters.
+
+- [`convert_time()`](https://docs.ropensci.org/rerddap/reference/convert_time.md)
+  : Convert a UDUNITS compatible time to ISO time
+- [`convert_units()`](https://docs.ropensci.org/rerddap/reference/convert_units.md)
+  : Convert a CF Standard Name to/from a GCMD Science Keyword
+- [`fipscounty()`](https://docs.ropensci.org/rerddap/reference/fipscounty.md)
+  : Convert a FIPS County Code to/from a County Name
+- [`key_words()`](https://docs.ropensci.org/rerddap/reference/key_words.md)
+  : Convert a CF Standard Name to/from a GCMD Science Keyword
+- [`version()`](https://docs.ropensci.org/rerddap/reference/version.md)
+  : Get ERDDAP™ version
+
+## Datasets
+
+Datasets used in the the functions nd vignette.
+
+- [`colors`](https://docs.ropensci.org/rerddap/reference/colors.md) :
+  cmocean colors The cmocean color palette by Kristen Thyng as
+  implemented in the R package "oce"
+- [`institutions`](https://docs.ropensci.org/rerddap/reference/institutions.md)
+  : institutions
+- [`ioos_categories`](https://docs.ropensci.org/rerddap/reference/ioos_categories.md)
+  : ioos_categories
+- [`keywords`](https://docs.ropensci.org/rerddap/reference/keywords.md)
+  : keywords
+- [`longnames`](https://docs.ropensci.org/rerddap/reference/longnames.md)
+  : longnames
+- [`standardnames`](https://docs.ropensci.org/rerddap/reference/standardnames.md)
+  : standardnames
+- [`variablenames`](https://docs.ropensci.org/rerddap/reference/variablenames.md)
+  : variablenames
+
+# Articles
+
+### All vignettes
+
+- [rerddap
+  introduction](https://docs.ropensci.org/rerddap/articles/rerddap.md):
+- [Using rerddap to Access Data from ERDDAP™
+  Servers](https://docs.ropensci.org/rerddap/articles/Using_rerddap.md):

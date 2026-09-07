@@ -1,0 +1,13 @@
+{
+  "commit": {
+    "commit": "7d59fadd3c44c94f1832a6fe72e8c5f4a568fcb3",
+    "author": "Roy Mendelssohn <roy.mendelssohn@noaa.gov>",
+    "time": "2026-07-08T23:49:36Z",
+    "files": 4,
+    "merge": false,
+    "message": "Added first pass at agentic skills\n"
+  },
+  "repo": "https://github.com/ropensci/rerddap",
+  "pkg": "rerddap",
+  "time": "2026-09-07T08:58:14Z"
+}
