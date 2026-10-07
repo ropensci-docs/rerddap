@@ -1,0 +1,13 @@
+{
+  "commit": {
+    "commit": "d42437d8308155af8da5d5da892cf5833589cf2e",
+    "author": "Roy Mendelssohn <roy.mendelssohn@noaa.gov>",
+    "time": "2026-10-07T16:18:59Z",
+    "files": 20,
+    "merge": false,
+    "message": "version 1.31RC\n\nimproved error handling,  agentic skills, update vignette\n"
+  },
+  "repo": "https://github.com/ropensci/rerddap",
+  "pkg": "rerddap",
+  "time": "2026-10-07T22:21:56Z"
+}

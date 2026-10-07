@@ -1,0 +1,345 @@
+# rerddap introduction
+
+`rerddap` is a general purpose R client for working with ERDDAP™
+servers. ERDDAP™ is a server built on top of OPenDAP, which serves some
+NOAA data. You can get gridded data
+([griddap](https://upwell.pfeg.noaa.gov/erddap/griddap/documentation.html)),
+which lets you query from gridded datasets, or table data
+([tabledap](https://upwell.pfeg.noaa.gov/erddap/tabledap/documentation.html))
+which lets you query from tabular datasets. In terms of how we interface
+with them, there are similarties, but some differences too. We try to
+make a similar interface to both data types in `rerddap`.
+
+## NetCDF
+
+`rerddap` supports NetCDF format, and is the default when using the
+[`griddap()`](https://docs.ropensci.org/rerddap/reference/griddap.md)
+function. NetCDF is a binary file format, and will have a much smaller
+footprint on your disk than csv. The binary file format means it’s
+harder to inspect, but the `ncdf4` package makes it easy to pull data
+out and write data back into a NetCDF file. Note the the file extension
+for NetCDF files is `.nc`. Whether you choose NetCDF or csv for small
+files won’t make much of a difference, but will with large files.
+
+## Caching
+
+Data files downloaded are cached in a single hidden directory
+`~/.rerddap` on your machine. It’s hidden so that you don’t accidentally
+delete the data, but you can still easily delete the data if you like.
+
+When you use
+[`griddap()`](https://docs.ropensci.org/rerddap/reference/griddap.md) or
+[`tabledap()`](https://docs.ropensci.org/rerddap/reference/tabledap.md)
+functions, we construct a MD5 hash from the base URL, and any query
+parameters - this way each query is separately cached. Once we have the
+hash, we look in `~/.rerddap` for a matching hash. If there’s a match we
+use that file on disk - if no match, we make a http request for the data
+to the ERDDAP™ server you specify.
+
+## ERDDAP™ servers
+
+You can get a data.frame of ERDDAP™ servers using the function
+[`servers()`](https://docs.ropensci.org/rerddap/reference/servers.md).
+The list of ERDDAP™ servers is drawn from the *Awesome ERDDAP™* page
+maintained by the Irish Marine Institute . If you know of more ERDDAP™
+servers, follow the instructions on that page to add the server.
+
+## Install
+
+Stable version from CRAN
+
+``` r
+
+install.packages("rerddap")
+```
+
+Or, the development version from GitHub
+
+``` r
+
+remotes::install_github("ropensci/rerddap")
+```
+
+``` r
+
+library("rerddap")
+```
+
+## Search
+
+First, you likely want to search for data, specify either `griddadp` or
+`tabledap`
+
+``` r
+
+ed_search(query = 'size', which = "table")
+#> # A tibble: 36 × 2
+#>    title                                                              dataset_id
+#>    <chr>                                                              <chr>     
+#>  1 CCE Prey Size and Hard Part Size Regressions                       mmtdPreyS…
+#>  2 CCE Teleost Prey Size and Hard Part Size Measurements              mmtdTeleo…
+#>  3 CalCOFI Larvae Sizes                                               erdCalCOF…
+#>  4 CCE Non-Teleost Prey Size and Hard Part Size Measurements          mmtdNonTe…
+#>  5 Channel Islands, Kelp Forest Monitoring, Size and Frequency, Natu… erdCinpKf…
+#>  6 File Names from the AWS S3 noaa-goes16 Bucket                      awsS3Noaa…
+#>  7 File Names from the AWS S3 noaa-goes17 Bucket                      awsS3Noaa…
+#>  8 PacIOOS Beach Camera 001: Waikiki, Oahu, Hawaii                    BEACHCAM-…
+#>  9 PacIOOS Beach Camera 003: Waimea Bay, Oahu, Hawaii                 BEACHCAM-…
+#> 10 PacIOOS Beach Camera 004: Waimea Bay (Offshore), Oahu, Hawaii      BEACHCAM-…
+#> # ℹ 26 more rows
+```
+
+``` r
+
+ed_search(query = 'size', which = "grid")
+#> # A tibble: 103 × 2
+#>    title                                                              dataset_id
+#>    <chr>                                                              <chr>     
+#>  1 Audio data from a local source.                                    testGridW…
+#>  2 Main Hawaiian Islands Multibeam Bathymetry Synthesis: 50-m Bathym… hmrg_bath…
+#>  3 Main Hawaiian Islands Multibeam Bathymetry Synthesis: 50-m Bathym… hmrg_bath…
+#>  4 Coastal Upwelling Transport Index (CUTI), Daily                    erdCUTIda…
+#>  5 SST smoothed frontal gradients                                     FRD_SSTgr…
+#>  6 Coastal Upwelling Transport Index (CUTI), Monthly                  erdCUTImo…
+#>  7 SST smoothed frontal gradients, Lon0360                            FRD_SSTgr…
+#>  8 Biologically Effective Upwelling Transport Index (BEUTI), Daily    erdBEUTId…
+#>  9 Biologically Effective Upwelling Transport Index (BEUTI), Monthly  erdBEUTIm…
+#> 10 Daily averaged and put on grid 4x daily NCEP reanalysis (psi.2012) noaa_psl_…
+#> # ℹ 93 more rows
+```
+
+There is now a convenience function to search over a list of ERDDAP™
+servers, designed to work with the function
+[`servers()`](https://docs.ropensci.org/rerddap/reference/servers.md)
+
+``` r
+
+server_list <- c(
+  emodnet_physics = 'https://erddap.emodnet-physics.eu/erddap/',
+  irish_marine_institute = 'https://erddap.marine.ie/erddap/'
+)
+global_search(query = 'size', server_list, 'griddap')
+#>                                                                                                                                                              title
+#> 1                                          EMODnet Physics - Total Suspended Matter - GridSeriesObservation - Concentration of total suspended matter - BALTIC SEA
+#> 2                                   EMODnet Physics - Total Suspended Matter - GridSeriesObservation - Concentration of total suspended matter - MEDITERRANEAN SEA
+#> 3                  EMODnet Physics - Total Suspended Matter - GridSeriesObservation - Concentration of total suspended matter - MEDITERRANEAN SEA - LOW RESOLUTION
+#> 4                                                                                                           EMODnet Physics - TEMPERATURE YEARLY RECORDING DENSITY
+#> 5                                                                  EMODPACE - Monthly sea level derived from CMEMS-DUACS (DT-2018) satellite altimetry (1993-2019)
+#> 6                                           EMODnet Physics - Total Suspended Matter - GridSeriesObservation - Concentration of total suspended matter - NORTH SEA
+#> 7                                                       EMODPACE - Absolute sea level trend (1993 – 2019) - derived from CMEMS-DUACS (DT-2018) satellite altimetry
+#> 8 EMODPACE - Sea Level monthly mean, EurAsia. This product is based, uses and reprocess the CMEMS product id. SEALEVEL_GLO_PHY_CLIMATE_L4_REP_OBSERVATIONS_008_057
+#> 9                                                                                                                                 COMPASS-NEATL Hindcast 2016-2020
+#>                                  dataset_id
+#> 1                             TSM_BALTICSEA
+#> 2                                 TSM_MBSEA
+#> 3                   TSM_MBSEA_LOWRESOLUTION
+#> 4                           ERD_EP_TEMP_DNS
+#> 5 EMODPACE_SLEV_MONTHLY_MEAN_DESEASONALIZED
+#> 6                              TSM_NORTHSEA
+#> 7                       EMODPACE_SLEV_TREND
+#> 8                EMODPACE_SLEV_MONTHLY_MEAN
+#> 9               compass_neatl_hindcast_grid
+#>                                         url
+#> 1 https://erddap.emodnet-physics.eu/erddap/
+#> 2 https://erddap.emodnet-physics.eu/erddap/
+#> 3 https://erddap.emodnet-physics.eu/erddap/
+#> 4 https://erddap.emodnet-physics.eu/erddap/
+#> 5 https://erddap.emodnet-physics.eu/erddap/
+#> 6 https://erddap.emodnet-physics.eu/erddap/
+#> 7 https://erddap.emodnet-physics.eu/erddap/
+#> 8 https://erddap.emodnet-physics.eu/erddap/
+#> 9          https://erddap.marine.ie/erddap/
+```
+
+## Information
+
+Then you can get information on a single dataset
+
+``` r
+
+info('erdCalCOFIlrvsiz')
+#> <ERDDAP™ info> erdCalCOFIlrvsiz 
+#>  Base URL: https://upwell.pfeg.noaa.gov/erddap 
+#>  Dataset Type: tabledap 
+#>  Variables:  
+#>      calcofi_species_code: 
+#>          Range: 19, 946 
+#>      common_name: 
+#>      cruise: 
+#>      itis_tsn: 
+#>      larvae_10m2: 
+...
+```
+
+## griddap (gridded) data
+
+First, get information on a dataset to see time range, lat/long range,
+and variables.
+
+``` r
+
+(out <- info('erdMBchla1day'))
+#> <ERDDAP info> erdMBchla1day 
+#>  Base URL: https://upwell.pfeg.noaa.gov/erddap 
+#>  Dataset Type: griddap 
+#>  Dimensions (range):  
+#>      time: (2006-01-01T12:00:00Z, 2023-06-27T12:00:00Z) 
+#>      altitude: (0.0, 0.0) 
+#>      latitude: (-45.0, 65.0) 
+#>      longitude: (120.0, 320.0) 
+#>  Variables:  
+#>      chlorophyll: 
+#>          Units: mg m-3
+```
+
+Then query for gridded data using the
+[`griddap()`](https://docs.ropensci.org/rerddap/reference/griddap.md)
+function
+
+``` r
+
+(res <- griddap(out,
+  time = c('2015-01-01','2015-01-03'),
+  latitude = c(14, 15),
+  longitude = c(125, 126)
+))
+#> <ERDDAP™ griddap> erdMBchla1day
+#>    Path: [/var/folders/xw/mcmsdzzx4mgbttplylgs7ysh0000gp/T//RtmpoME6FV/R/rerddap/4d844aa48552049c3717ac94ced5f9b8.nc]
+#>    Last updated: [2023-06-29 13:18:53.945082]
+#>    File size:    [0.03 mb]
+#>    Dimensions (dims/vars):   [4 X 1]
+#>    Dim names: time, altitude, latitude, longitude
+#>    Variable names: Chlorophyll Concentration in Sea Water
+#>    data.frame (rows/columns):   [5043 X 5]
+#> # A tibble: 5,043 × 5
+#>    longitude  latitude  altitude time                 chlorophyll
+#>    <dbl[1d]> <dbl[1d]> <dbl[1d]> <chr>                      <dbl>
+#>  1      125         14         0 2015-01-01T12:00:00Z          NA
+#>  2      125.        14         0 2015-01-01T12:00:00Z          NA
+#>  3      125.        14         0 2015-01-01T12:00:00Z          NA
+#>  4      125.        14         0 2015-01-01T12:00:00Z          NA
+#>  5      125.        14         0 2015-01-01T12:00:00Z          NA
+#>  6      125.        14         0 2015-01-01T12:00:00Z          NA
+#>  7      125.        14         0 2015-01-01T12:00:00Z          NA
+#>  8      125.        14         0 2015-01-01T12:00:00Z          NA
+#>  9      125.        14         0 2015-01-01T12:00:00Z          NA
+#> 10      125.        14         0 2015-01-01T12:00:00Z          NA
+#> # ℹ 5,033 more rows
+```
+
+The output of
+[`griddap()`](https://docs.ropensci.org/rerddap/reference/griddap.md) is
+a list that you can explore further. Get the summary
+
+``` r
+
+res$summary
+#> $filename
+#> [1] "/var/folders/xw/mcmsdzzx4mgbttplylgs7ysh0000gp/T//RtmpoME6FV/R/rerddap/4d844aa48552049c3717ac94ced5f9b8.nc"
+#> 
+#> $writable
+#> [1] FALSE
+#> 
+#> $id
+#> [1] 65536
+#> 
+#> $error
+#> [1] FALSE
+#> 
+#> $safemode
+#> [1] FALSE
+#> 
+...
+```
+
+Get the dimension variables
+
+``` r
+
+names(res$summary$dim)
+#> [1] "time"      "altitude"  "latitude"  "longitude"
+```
+
+Get the data.frame (beware: you may want to just look at the `head` of
+the data.frame if large)
+
+``` r
+
+head(res$data)
+#>   longitude latitude altitude                 time chlorophyll
+#> 1   125.000       14        0 2015-01-01T12:00:00Z          NA
+#> 2   125.025       14        0 2015-01-01T12:00:00Z          NA
+#> 3   125.050       14        0 2015-01-01T12:00:00Z          NA
+#> 4   125.075       14        0 2015-01-01T12:00:00Z          NA
+#> 5   125.100       14        0 2015-01-01T12:00:00Z          NA
+#> 6   125.125       14        0 2015-01-01T12:00:00Z          NA
+```
+
+## tabledap (tabular) data
+
+``` r
+
+(out <- info('erdCalCOFIlrvsiz'))
+#> <ERDDAP™ info> erdCalCOFIlrvsiz 
+#>  Base URL: https://upwell.pfeg.noaa.gov/erddap 
+#>  Dataset Type: tabledap 
+#>  Variables:  
+#>      calcofi_species_code: 
+#>          Range: 19, 946 
+#>      common_name: 
+#>      cruise: 
+#>      itis_tsn: 
+#>      larvae_10m2: 
+...
+```
+
+``` r
+
+(dat <- tabledap('erdCalCOFIlrvsiz', fields=c('latitude','longitude','larvae_size',
+  'scientific_name'), 'time>=2011-01-01', 'time<=2011-12-31'))
+#> <ERDDAP™ tabledap> erdCalCOFIlrvsiz
+#>    Path: [/var/folders/xw/mcmsdzzx4mgbttplylgs7ysh0000gp/T//RtmpoME6FV/R/rerddap/db7389db5b5b0ed9c426d5c13bc43d18.csv]
+#>    Last updated: [2023-06-29 13:18:57.579066]
+#>    File size:    [0.05 mb]
+#> # A tibble: 1,304 × 4
+#>    latitude  longitude  larvae_size scientific_name     
+#>    <chr>     <chr>      <chr>       <chr>               
+#>  1 32.956665 -117.305   4.5         Engraulis mordax    
+#>  2 32.91     -117.4     5.0         Merluccius productus
+#>  3 32.511665 -118.21167 2.0         Merluccius productus
+#>  4 32.511665 -118.21167 3.0         Merluccius productus
+#>  5 32.511665 -118.21167 5.5         Merluccius productus
+#>  6 32.511665 -118.21167 6.0         Merluccius productus
+#>  7 32.511665 -118.21167 2.8         Merluccius productus
+#>  8 32.511665 -118.21167 3.0         Sardinops sagax     
+#>  9 32.511665 -118.21167 5.0         Sardinops sagax     
+#> 10 32.511665 -118.21167 2.5         Engraulis mordax    
+#> # ℹ 1,294 more rows
+```
+
+Since both
+[`griddap()`](https://docs.ropensci.org/rerddap/reference/griddap.md)
+and
+[`tabledap()`](https://docs.ropensci.org/rerddap/reference/tabledap.md)
+give back data.frame’s, it’s easy to do downstream manipulation. For
+example, we can use `dplyr` to filter, summarize, group, and sort:
+
+``` r
+
+library("dplyr")
+dat$larvae_size <- as.numeric(dat$larvae_size)
+dat %>%
+  group_by(scientific_name) %>%
+  summarise(mean_size = mean(larvae_size)) %>%
+  arrange(desc(mean_size))
+#> # A tibble: 7 × 2
+#>   scientific_name       mean_size
+#>   <chr>                     <dbl>
+#> 1 Anoplopoma fimbria        23.3 
+#> 2 Engraulis mordax           9.26
+#> 3 Sardinops sagax            7.28
+#> 4 Merluccius productus       5.48
+#> 5 Tactostoma macropus        5   
+#> 6 Scomber japonicus          3.4 
+#> 7 Trachurus symmetricus      3.29
+```

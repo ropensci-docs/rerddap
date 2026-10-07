@@ -1,0 +1,246 @@
+# Get ERDDAP™ tabledap data.
+
+Get ERDDAP™ tabledap data.
+
+## Usage
+
+``` r
+tabledap(
+  x,
+  ...,
+  fields = NULL,
+  distinct = FALSE,
+  orderby = NULL,
+  orderbymax = NULL,
+  orderbymin = NULL,
+  orderbyminmax = NULL,
+  units = NULL,
+  fmt = "csv",
+  url = eurl(),
+  store = disk(),
+  callopts = list()
+)
+```
+
+## Arguments
+
+- x:
+
+  Anything coercable to an object of class info. So the output of a call
+  to [`info()`](https://docs.ropensci.org/rerddap/reference/info.md), or
+  a datasetid, which will internally be passed through
+  [`info()`](https://docs.ropensci.org/rerddap/reference/info.md)
+
+- ...:
+
+  Any number of key-value pairs in quotes as query constraints. See
+  Details & examples
+
+- fields:
+
+  Columns to return, as a character vector
+
+- distinct:
+
+  If `TRUE` ERDDAP™ will sort all of the rows in the results table
+  (starting with the first requested variable, then using the second
+  requested variable if the first variable has a tie, ...), then remove
+  all non-unique rows of data. In many situations, ERDDAP™ can return
+  distinct values quickly and efficiently. But in some cases, ERDDAP™
+  must look through all rows of the source dataset.
+
+- orderby:
+
+  If used, ERDDAP™ will sort all of the rows in the results table
+  (starting with the first variable, then using the second variable if
+  the first variable has a tie, ...). Normally, the rows of data in the
+  response table are in the order they arrived from the data source.
+  orderBy allows you to request that the results table be sorted in a
+  specific way. For example, use `orderby=c("stationID,time")` to get
+  the results sorted by stationID, then time. The orderby variables MUST
+  be included in the list of requested variables in the fields
+  parameter.
+
+- orderbymax:
+
+  Give a vector of one or more fields, that must be included in the
+  fields parameter as well. Gives back data given constraints. ERDDAP™
+  will sort all of the rows in the results table (starting with the
+  first variable, then using the second variable if the first variable
+  has a tie, ...) and then just keeps the rows where the value of the
+  last sort variable is highest (for each combination of other values).
+
+- orderbymin:
+
+  Same as `orderbymax` parameter, except returns minimum value.
+
+- orderbyminmax:
+
+  Same as `orderbymax` parameter, except returns two rows for every
+  combination of the n-1 variables: one row with the minimum value, and
+  one row with the maximum value.
+
+- units:
+
+  One of 'udunits' (units will be described via the UDUNITS standard
+  (e.g.,degrees_C)) or 'ucum' (units will be described via the UCUM
+  standard (e.g., Cel)).
+
+- fmt:
+
+  whether download should be as '.csv' (default) or '.parquet'
+
+- url:
+
+  A URL for an ERDDAP™ server. Default:
+  https://upwell.pfeg.noaa.gov/erddap/ - See
+  [`eurl()`](https://docs.ropensci.org/rerddap/reference/eurl.md) for
+  more information
+
+- store:
+
+  One of `disk` (default) or `memory`. You can pass options to `disk`
+
+- callopts:
+
+  Curl options passed on to
+  [crul::verb-GET](https://docs.ropensci.org/crul/reference/verb-GET.html)
+  (must be named parameters)
+
+## Value
+
+An object of class `tabledap`. This class is a thin wrapper around a
+data.frame, so the data you get back is a data.frame with metadata
+attached as attributes (datasetid, path (path where the csv is stored on
+your machine), url (url for the request))
+
+## Details
+
+For key-value pair query constraints, the valid operators are =, != (not
+equals), =~ (a regular expression test), \<, \<=, \>, and \>= . For
+regular expressions you need to add a regular expression. For others,
+nothing more is needed. Construct the entry like `'time>=2001-07-07'`
+with the parameter on the left, value on the right, and the operator in
+the middle, all within a set of quotes. Since ERDDAP accepts values
+other than `=`, we can't simply do `time = '2001-07-07'` as we normally
+would.
+
+Server-side functionality: Some tasks are done server side. You don't
+have to worry about what that means. They are provided via parameters in
+this function. See `distinct`, `orderby`, `orderbymax`, `orderbymin`,
+`orderbyminmax`, and `units`.
+
+Data is cached based on all parameters you use to get a dataset,
+including base url, query parameters. If you make the same exact call in
+the same or a different R session, as long you don't clear the cache,
+the function only reads data from disk, and does not have to request the
+data from the web again.
+
+If you run into an error like "HTTP Status 500 - There was a
+(temporary?) problem. Wait a minute, then try again.". it's likely they
+are hitting up against a size limit, and they should reduce the amount
+of data they are requesting either via space, time, or variables. Pass
+in `config = verbose()` to the request, and paste the URL into your
+browser to see if the output is garbled to examine if there's a problem
+with servers or this package
+
+## References
+
+https://upwell.pfeg.noaa.gov/erddap/index.html
+
+## Examples
+
+``` r
+if (FALSE) { # \dontrun{
+# Just passing the datasetid without fields gives all columns back
+tabledap('erdCinpKfmBT')
+
+# Pass time constraints
+tabledap('erdCinpKfmBT', 'time>=2006-08-24')
+
+# Pass in fields (i.e., columns to retrieve) & time constraints
+tabledap('erdCinpKfmBT',
+  fields = c('longitude', 'latitude', 'Aplysia_californica_Mean_Density'),
+  'time>=2006-08-24'
+)
+
+# Get info on a datasetid, then get data given information learned
+info('erdCalCOFIlrvsiz')$variables
+tabledap('erdCalCOFIlrvsiz', fields=c('latitude','longitude','larvae_size',
+   'itis_tsn'), 'time>=2011-10-25', 'time<=2011-10-31')
+
+# An example workflow
+## Search for data
+(out <- ed_search(query='fish', which = 'table'))
+## Using a datasetid, search for information on a datasetid
+id <- out$alldata[[1]]$dataset_id
+vars <- info(id)$variables
+## Get data from the dataset
+vars$variable_name[1:3]
+tabledap(id, fields = vars$variable_name[1:3])
+
+# Time constraint
+## Limit by time with date only
+(info <- info('erdCinpKfmBT'))
+tabledap(info, fields = c(
+  'latitude','longitude','Haliotis_fulgens_Mean_Density'),
+  'time>=2001-07-14')
+
+# Use distinct parameter - compare to distinct = FALSE
+tabledap('sg114_3',
+   fields=c('longitude','latitude','trajectory'),
+   'time>=2008-12-05', distinct = TRUE)
+
+# Use units parameter
+## In this example, values are the same, but sometimes they can be different
+## given the units value passed
+tabledap('erdCinpKfmT', fields=c('longitude','latitude','time','temperature'),
+   'time>=2007-09-19', 'time<=2007-09-21', units='udunits')
+tabledap('erdCinpKfmT', fields=c('longitude','latitude','time','temperature'),
+   'time>=2007-09-19', 'time<=2007-09-21', units='ucum')
+
+# Use orderby parameter
+tabledap('erdCinpKfmT', fields=c('longitude','latitude','time','temperature'),
+   'time>=2007-09-19', 'time<=2007-09-21', orderby='temperature')
+# Use orderbymax parameter
+tabledap('erdCinpKfmT', fields=c('longitude','latitude','time','temperature'),
+   'time>=2007-09-19', 'time<=2007-09-21', orderbymax='temperature')
+# Use orderbymin parameter
+tabledap('erdCinpKfmT', fields=c('longitude','latitude','time','temperature'),
+   'time>=2007-09-19', 'time<=2007-09-21', orderbymin='temperature')
+# Use orderbyminmax parameter
+tabledap('erdCinpKfmT', fields=c('longitude','latitude','time','temperature'),
+   'time>=2007-09-19', 'time<=2007-09-21', orderbyminmax='temperature')
+# Use orderbymin parameter with multiple values
+tabledap('erdCinpKfmT',
+   fields=c('longitude','latitude','time','depth','temperature'),
+   'time>=2007-06-10', 'time<=2007-09-21',
+   orderbymax=c('depth','temperature')
+)
+
+# Integrate with taxize
+out <- tabledap('erdCalCOFIlrvcntHBtoHI',
+   fields = c('latitude','longitude','scientific_name','itis_tsn'),
+   'time>=2007-06-10', 'time<=2007-09-21'
+)
+tsns <- unique(out$itis_tsn[1:100])
+library("taxize")
+classif <- classification(tsns, db = "itis")
+head(rbind(classif)); tail(rbind(classif))
+
+# Write to memory (within R), or to disk
+(out <- info('erdCinpKfmBT'))
+## disk, by default (to prevent bogging down system w/ large datasets)
+## the 2nd call is much faster as it's mostly just the time of reading
+## in the table from disk
+system.time( tabledap('erdCinpKfmBT', store = disk()) )
+system.time( tabledap('erdCinpKfmBT', store = disk()) )
+## memory
+tabledap('erdCinpKfmBT', store = memory())
+
+# use a different ERDDAP™ server
+## NOAA IOOS NERACOOS
+url <- "http://www.neracoos.org/erddap/"
+tabledap("E01_optics_hist", url = url)
+} # }
+```
